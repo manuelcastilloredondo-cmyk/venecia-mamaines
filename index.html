@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Venecia · Mamaines</title>
+<meta name="description" content="Guía y mapa del viaje a Venecia, 11–14 de noviembre de 2026.">
+<meta name="theme-color" content="#5f4590">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Venecia">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Open+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<style>
+:root{
+  --paper:#f7f5fa; --surface:#fff; --ink:#241f30; --muted:#6a6478; --line:#e4dfec; --chip:#efeaf6;
+  --accent:#7b5ea7; --accent-ink:#5f4590; --ok:#2f7d4f; --warn:#b5650d;
+  --c-casa:#5f4590; --c-visita:#e4572e; --c-gratis:#0d8a7d; --c-comer:#d97706; --c-transporte:#1f6feb; --c-islas:#c2185b;
+  --sunset:linear-gradient(135deg,#34265a 0%,#7b5ea7 55%,#e7a98a 100%);
+  --display:"Poppins","Avenir Next","Segoe UI",Arial,sans-serif;
+  --body:"Open Sans","Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --nav-h:64px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#15121b; --surface:#1f1a27; --ink:#efeaf6; --muted:#a79fb6; --line:#342d40; --chip:#2a2433;
+  --accent:#a58bd6; --accent-ink:#c7b4ee; --ok:#6cc392; --warn:#f0a35a; color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#15121b; --surface:#1f1a27; --ink:#efeaf6; --muted:#a79fb6; --line:#342d40; --chip:#2a2433; --accent:#a58bd6; --accent-ink:#c7b4ee; --ok:#6cc392; --warn:#f0a35a; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--paper);color:var(--ink);font:15px/1.55 var(--body);-webkit-tap-highlight-color:transparent}
+a{color:inherit}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1;text-wrap:balance}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* cabecera */
+.top{position:fixed;inset:0 0 auto;z-index:1000;background:var(--sunset);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 10px) max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left));display:flex;align-items:center;gap:12px}
+.top .logo{width:40px;height:40px;border-radius:10px;flex:none;box-shadow:0 0 0 2px rgba(255,255,255,.6)}
+.top h1{font-size:18px;font-weight:700}
+.top small{display:block;font:600 11px var(--display);letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.top .cd{margin-left:auto;text-align:right;font-family:var(--display);line-height:1}
+.top .cd b{font-size:24px;font-weight:800}
+.top .cd span{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;margin-top:2px}
+.top-h{height:calc(env(safe-area-inset-top,0px) + 56px)}
+
+/* vistas */
+main{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 24px)}
+.view{display:none}
+.view.on{display:block}
+.wrap{max-width:820px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left)) 0 max(16px,env(safe-area-inset-right))}
+.sec{margin:26px 0 12px;font-size:24px;font-weight:700;letter-spacing:-.01em}
+.lede{color:var(--muted);margin:0 0 14px}
+.kicker{font:700 11px var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink)}
+
+/* mapa */
+#v-mapa{position:fixed;inset:calc(env(safe-area-inset-top,0px) + 56px) 0 calc(var(--nav-h) + env(safe-area-inset-bottom,0px)) 0;display:none}
+#v-mapa.on{display:block}
+#map{position:absolute;inset:0;background:#dfe6ea}
+.filters{position:absolute;z-index:500;top:10px;left:0;right:0;display:flex;gap:6px;overflow-x:auto;padding:0 12px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.fchip{flex:none;border:0;border-radius:999px;padding:7px 12px;background:var(--surface);box-shadow:0 2px 8px rgba(36,31,48,.18);font:600 12px var(--display);display:inline-flex;align-items:center;gap:6px;cursor:pointer;opacity:.55}
+.fchip.on{opacity:1}
+.fchip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.mapbtns{position:absolute;z-index:500;right:12px;bottom:14px;display:grid;gap:8px}
+.mbtn{border:0;width:46px;height:46px;border-radius:50%;background:var(--surface);box-shadow:0 2px 10px rgba(36,31,48,.25);cursor:pointer;display:grid;place-content:center;font:700 18px var(--display);color:var(--accent-ink)}
+.pin{width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);display:grid;place-content:center}
+.pin span{transform:rotate(45deg);color:#fff;font:800 11px var(--display)}
+.pin.big{width:36px;height:36px}
+.pin.big span{font-size:16px}
+.leaflet-popup-content-wrapper{border-radius:14px;background:var(--surface);color:var(--ink)}
+.leaflet-popup-tip{background:var(--surface)}
+.leaflet-popup-content{margin:14px 16px;font:14px/1.45 var(--body);min-width:210px}
+.pop h3{font-size:16px;margin:2px 0 6px}
+.pop p{margin:0 0 10px;color:var(--muted)}
+.pop .row{display:flex;gap:6px;flex-wrap:wrap}
+.leaflet-container a.btn{color:#fff}
+.leaflet-container a.btn.line{color:var(--accent-ink)}
+
+/* botones */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;padding:8px 12px;font:600 13px var(--display);text-decoration:none;cursor:pointer}
+.btn.line{background:transparent;color:var(--accent-ink)}
+.btn.block{width:100%;padding:12px}
+
+/* tarjetas */
+.card{background:var(--surface);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(36,31,48,.06),0 8px 24px rgba(36,31,48,.06);margin-bottom:12px}
+.day{display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px}
+.day .dn{font:800 40px/0.9 var(--display);color:var(--accent);letter-spacing:-.03em}
+.day .dw{font:700 11px var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.day h3{font-size:18px;margin-bottom:8px}
+.steps{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.steps li{display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px}
+.steps .t{font:600 12px var(--display);color:var(--muted);padding-top:2px}
+.steps a{color:var(--ink);text-decoration:none}
+.steps a::after{content:" ⌖";color:var(--accent);font-weight:700}
+.tag{display:inline-block;font:700 10px var(--display);letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:4px;background:var(--chip);color:var(--muted)}
+.tag.ok{color:var(--ok)}
+.tag.warn{color:var(--warn)}
+
+.tk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:start}
+.tk h3{font-size:17px}
+.tk .p{font:700 17px var(--display);color:var(--accent-ink);white-space:nowrap}
+.tk p{grid-column:1/-1;margin:2px 0 0;color:var(--muted)}
+.tk .row{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+.food{display:grid;gap:4px}
+.food h3{font-size:16px}
+.food .addr{font-size:13px;color:var(--muted)}
+.food p{margin:0}
+.food .row{display:flex;gap:8px;margin-top:6px}
+
+.list{margin:0;padding-left:18px;display:grid;gap:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.check{list-style:none;padding:0;margin:0;display:grid;gap:4px}
+.check label{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--accent);flex:none;margin-top:1px}
+.check li.done span{text-decoration:line-through;color:var(--muted)}
+.bk{display:grid;gap:2px}
+.bk .ref{font:700 18px var(--display);letter-spacing:.05em}
+.note{font-size:13px;color:var(--muted)}
+.install{display:none}
+.install.on{display:block}
+
+/* navegación inferior */
+.tabs{position:fixed;inset:auto 0 0 0;z-index:1000;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -4px 20px rgba(36,31,48,.06)}
+.tabs button{border:0;background:none;height:var(--nav-h);display:grid;place-content:center;gap:3px;cursor:pointer;color:var(--muted);font:600 11px var(--display);letter-spacing:.02em}
+.tabs svg{width:22px;height:22px;margin:0 auto;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs button.on{color:var(--accent-ink)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 16px);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:10px;font-size:14px;z-index:2000}
+</style>
+</head>
+<body>
+<header class="top">
+  <img class="logo" src="icon-192.png" alt="Mamaines" width="40" height="40">
+  <div><small>Mamaines</small><h1>Venecia · 11–14 nov</h1></div>
+  <div class="cd" id="cd"></div>
+</header>
+<div class="top-h"></div>
+
+<main>
+  <!-- MAPA -->
+  <section id="v-mapa" class="view" aria-label="Mapa">
+    <div id="map"></div>
+    <div class="filters" id="filters"></div>
+    <div class="mapbtns">
+      <button class="mbtn" id="btn-loc" aria-label="Mi ubicación" title="Mi ubicación">◎</button>
+      <button class="mbtn" id="btn-home" aria-label="Volver al apartamento" title="Apartamento">⌂</button>
+      <button class="mbtn" id="btn-all" aria-label="Ver todo" title="Ver todo">⤢</button>
+    </div>
+  </section>
+
+  <!-- PLAN -->
+  <section id="v-plan" class="view on" aria-label="Plan">
+    <div class="wrap">
+      <h2 class="sec">Plan día a día</h2>
+      <p class="lede">Tarde del miércoles, dos días completos y la mañana del sábado. Cada día tiene su ruta en Google Maps.</p>
+      <div id="plan"></div>
+    </div>
+  </section>
+
+  <!-- ENTRADAS -->
+  <section id="v-entradas" class="view" aria-label="Entradas">
+    <div class="wrap">
+      <h2 class="sec">Entradas</h2>
+      <p class="lede">Solo hay que reservar ya la Basílica y el Palacio Ducal. Precios de 2026 por persona.</p>
+      <div id="tickets"></div>
+    </div>
+  </section>
+
+  <!-- COMER -->
+  <section id="v-comer" class="view" aria-label="Comer">
+    <div class="wrap">
+      <h2 class="sec">Comer barato y típico</h2>
+      <p class="lede">Cicchetti de pie en la barra: 1,50–3 € cada uno, la ombra de vino 1–2,50 € y el spritz 3–5 €. Una ruta de 3–4 bacari sale por 20–30 € por persona.</p>
+      <div id="food"></div>
+      <h2 class="sec">Qué probar</h2>
+      <div class="card"><ul class="list">
+        <li><b>Sarde in saor:</b> sardinas agridulces con cebolla.</li>
+        <li><b>Baccalà mantecato:</b> crema de bacalao sobre polenta o pan.</li>
+        <li><b>Polpette:</b> albóndigas fritas de carne o atún.</li>
+        <li><b>Bigoli in salsa:</b> pasta gruesa con anchoa y cebolla.</li>
+        <li><b>Fegato alla veneziana:</b> hígado encebollado.</li>
+        <li><b>Risotto al nero di seppia</b> y <b>tramezzini</b> (sándwiches blandos).</li>
+        <li><b>Dulce de San Martino</b> (galleta de membrillo, solo estos días).</li>
+      </ul></div>
+      <h2 class="sec">Para ahorrar</h2>
+      <div class="card"><ul class="list">
+        <li>Comed de pie: en mesa se cobra el <i>coperto</i> aparte.</li>
+        <li>Llevad efectivo; muchos bacari no cobran con tarjeta importes pequeños.</li>
+        <li>Mejor hora: 18:00–19:30, con los cicchetti recién hechos.</li>
+        <li>Desayunad en el apartamento (tiene cocina) con compra de Strada Nova.</li>
+        <li>Evitad cartas con fotos y camareros que captan en la puerta.</li>
+        <li>Las fuentes públicas dan agua potable: llevad botella.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- INFO -->
+  <section id="v-info" class="view" aria-label="Información">
+    <div class="wrap">
+      <div class="card install" id="install">
+        <div class="kicker">Instala la app</div>
+        <p style="margin:6px 0 10px" id="install-txt">Añádela a la pantalla de inicio para abrirla como una app y tenerla sin conexión.</p>
+        <button class="btn block" id="install-btn" hidden>Instalar Venecia</button>
+      </div>
+
+      <h2 class="sec">Mapa compartido</h2>
+      <div class="card"><p style="margin:0 0 10px">El mapa con todos los sitios en Google Maps, para abrirlo en su app.</p><a class="btn block" href="https://www.google.com/maps/d/viewer?mid=1QPyokXWqiSGEQV1uZjwALQF0u1NNgzg" target="_blank" rel="noopener">Abrir el mapa en Google Maps</a></div>
+
+      <h2 class="sec">Antes de salir</h2>
+      <div class="card"><ul class="check" id="check"></ul><p class="note">Se guarda en este móvil.</p></div>
+
+      <h2 class="sec">Reservas</h2>
+      <div id="bookings"></div>
+
+      <h2 class="sec">Transporte</h2>
+      <div class="card">
+        <table>
+          <tr><td>Vaporetto sencillo (75 min)</td><td class="n">9,50 €</td></tr>
+          <tr><td>Abono 24 h</td><td class="n">25 €</td></tr>
+          <tr><td>Abono 48 h</td><td class="n">35 €</td></tr>
+          <tr><td>Abono 72 h</td><td class="n">45 €</td></tr>
+        </table>
+        <ul class="list" style="margin-top:12px">
+          <li><b>Jueves:</b> a San Marco andando y vuelta en línea 1 por el Gran Canal (un sencillo).</li>
+          <li><b>Viernes:</b> abono de 24 h para Murano y Burano desde Fondamente Nove.</li>
+          <li>Validad la tarjeta en el lector <b>cada vez</b> que subáis.</li>
+          <li><b>Aeropuerto:</b> barco Alilaguna línea naranja ↔ Fondamente Nove. Los abonos ACTV no valen. Precio orientativo 15 €.</li>
+          <li>Plan B: bus ATVO a Piazzale Roma (20 min) y 25–30 min andando.</li>
+        </ul>
+      </div>
+
+      <h2 class="sec">Avisos</h2>
+      <div class="card"><ul class="list">
+        <li><b>Acqua alta:</b> noviembre es temporada. Mirad la previsión de mareas cada mañana y llevad calzado impermeable.</li>
+        <li><b>11 nov, San Martino:</b> fiesta local, niños con cacerolas por la calle.</li>
+        <li><b>Tasa de acceso:</b> no os afecta (solo abril–julio y además dormís en Venecia).</li>
+        <li><b>Clima:</b> 6–13 °C, húmedo y con niebla. Capas y paraguas plegable.</li>
+        <li><b>Carteristas</b> en Rialto, San Marco y la línea 1 llena: mochila delante.</li>
+        <li>Prohibido sentarse a comer en las escalinatas de San Marco: hay multas.</li>
+        <li>Billetes sin maleta facturada: revisad medidas del equipaje de mano.</li>
+        <li><b>Emergencias:</b> 112.</li>
+      </ul></div>
+
+      <h2 class="sec">Presupuesto por persona</h2>
+      <div class="card">
+        <table>
+          <tr><td>Apartamento (308,06 € entre 3)</td><td class="n">103 €</td></tr>
+          <tr><td>Basílica + Palacio Ducal</td><td class="n">45 €</td></tr>
+          <tr><td>Vaporetto (sencillo + 24 h)</td><td class="n">34,50 €</td></tr>
+          <tr><td>Barco al aeropuerto, ida y vuelta</td><td class="n">~30 €</td></tr>
+          <tr><td>Comida</td><td class="n">90–130 €</td></tr>
+          <tr><th>Total sin vuelos</th><th class="n" style="text-align:right">~300–350 €</th></tr>
+        </table>
+      </div>
+
+      <p class="note" style="margin:20px 0 6px">Los puntos del mapa son aproximados; los botones abren la ubicación exacta en Google Maps. Mapa © OpenStreetMap.</p>
+      <p class="note"><button class="btn line" id="theme">Cambiar modo claro/oscuro</button></p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Secciones">
+  <button data-v="plan" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Plan</button>
+  <button data-v="mapa"><svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>Mapa</button>
+  <button data-v="entradas"><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/><path d="M14 4v12"/></svg>Entradas</button>
+  <button data-v="comer"><svg viewBox="0 0 24 24"><path d="M8 3v8a3 3 0 0 0 6 0V3M11 3v18M18 3c-2 2-2 6 0 8v10"/></svg>Comer</button>
+  <button data-v="info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Info</button>
+</nav>
+
+<script src="vendor/leaflet.js"></script>
+<script>
+const PLACES = [{"id": "casa", "cat": "casa", "name": "Apartamento (Cannaregio 4064)", "lat": 45.44215, "lng": 12.335, "q": "45.44215,12.335", "note": "Campo delle Erbe, junto a calle Corrente. Entrada 13:00–00:00 · salida antes de las 10:00. Tel. +39 320 150 9337."}, {"id": "fn", "cat": "transporte", "name": "Fondamente Nove", "lat": 45.443, "lng": 12.3412, "q": "Fondamente Nove, Venezia", "note": "Barco Alilaguna naranja al aeropuerto y vaporettos a Murano y Burano. Unos 10 min a pie."}, {"id": "cadoro", "cat": "transporte", "name": "Vaporetto Ca' d'Oro (línea 1)", "lat": 45.4405, "lng": 12.334, "q": "Ca' d'Oro vaporetto stop, Venezia", "note": "Vuestra parada del Gran Canal, a unos 5 min."}, {"id": "traghetto", "cat": "transporte", "name": "Traghetto de Santa Sofia", "lat": 45.4401, "lng": 12.3342, "q": "Traghetto Santa Sofia, Venezia", "note": "Góndola que cruza el Gran Canal hasta el mercado de Rialto. Unos 2 €, se va de pie."}, {"id": "vce", "cat": "transporte", "name": "Aeropuerto Marco Polo (VCE)", "lat": 45.5053, "lng": 12.3519, "q": "Aeroporto Marco Polo, Venezia", "note": "Llegada mié 11 a las 17:45 (UX1083). Salida sáb 14 a las 12:05 (IB0678)."}, {"id": "basilica", "cat": "visita", "name": "Basílica de San Marco", "lat": 45.4345, "lng": 12.3397, "q": "Basilica di San Marco, Venezia", "note": "10 € la básica, solo online con hora. Sin mochilas.", "url": "https://tickets.basilicasanmarco.it/"}, {"id": "ducale", "cat": "visita", "name": "Palacio Ducal", "lat": 45.4337, "lng": 12.3404, "q": "Palazzo Ducale, Venezia", "note": "35 €. Incluye Museo Correr. Reservad online. 2–2,5 h.", "url": "https://palazzoducale.visitmuve.it/"}, {"id": "campanile", "cat": "visita", "name": "Campanile de San Marco", "lat": 45.4341, "lng": 12.339, "q": "Campanile di San Marco, Venezia", "note": "15 €. Opcional; con niebla no compensa."}, {"id": "rialto", "cat": "visita", "name": "Puente de Rialto", "lat": 45.438, "lng": 12.3359, "q": "Ponte di Rialto, Venezia", "note": "Gratis. Mejor a primera hora o de noche."}, {"id": "salute", "cat": "visita", "name": "Santa Maria della Salute", "lat": 45.4309, "lng": 12.3344, "q": "Basilica di Santa Maria della Salute, Venezia", "note": "Entrada a la iglesia gratis."}, {"id": "biennale", "cat": "visita", "name": "Biennale Arte (Giardini)", "lat": 45.429, "lng": 12.3575, "q": "Giardini della Biennale, Venezia", "note": "30 €. Hasta el 22 nov, 10–18 h, cerrada los lunes. Solo si os gusta el arte contemporáneo.", "url": "https://www.labiennale.org/"}, {"id": "mercado", "cat": "gratis", "name": "Mercado de Rialto", "lat": 45.4393, "lng": 12.3339, "q": "Mercato di Rialto, Venezia", "note": "Pescado y verdura, solo por la mañana (mar–sáb)."}, {"id": "academia", "cat": "gratis", "name": "Puente de la Academia", "lat": 45.4316, "lng": 12.3289, "q": "Ponte dell'Accademia, Venezia", "note": "La postal del Gran Canal con la Salute al fondo."}, {"id": "dogana", "cat": "gratis", "name": "Punta della Dogana", "lat": 45.4306, "lng": 12.3365, "q": "Punta della Dogana, Venezia", "note": "La punta entre el Gran Canal y la Giudecca."}, {"id": "zattere", "cat": "gratis", "name": "Zattere", "lat": 45.4297, "lng": 12.3262, "q": "Fondamenta Zattere, Venezia", "note": "Paseo junto al agua para el atardecer y el spritz."}, {"id": "ghetto", "cat": "gratis", "name": "Gueto judío", "lat": 45.4446, "lng": 12.3263, "q": "Campo del Ghetto Nuovo, Venezia", "note": "El primer gueto de la historia (1516). A 10 min del apartamento."}, {"id": "misericordia", "cat": "gratis", "name": "Fondamenta della Misericordia", "lat": 45.4442, "lng": 12.3325, "q": "Fondamenta della Misericordia, Venezia", "note": "Canal de barrio, ambiente local al caer la tarde."}, {"id": "orto", "cat": "gratis", "name": "Madonna dell'Orto", "lat": 45.446, "lng": 12.3334, "q": "Chiesa della Madonna dell'Orto, Venezia", "note": "La iglesia de Tintoretto, en vuestro barrio."}, {"id": "acquaalta", "cat": "gratis", "name": "Libreria Acqua Alta", "lat": 45.4378, "lng": 12.3427, "q": "Libreria Acqua Alta, Venezia", "note": "Libros en góndolas y bañeras. Id temprano."}, {"id": "murano", "cat": "islas", "name": "Murano", "lat": 45.4573, "lng": 12.3524, "q": "Murano, Venezia", "note": "Isla del vidrio. Vaporetto desde Fondamente Nove."}, {"id": "burano", "cat": "islas", "name": "Burano", "lat": 45.4855, "lng": 12.417, "q": "Burano, Venezia", "note": "Casas de colores. Línea 12 desde Fondamente Nove, unos 40 min."}, {"id": "vedova", "cat": "comer", "name": "Alla Vedova (Ca' d'Oro)", "lat": 45.441, "lng": 12.3343, "q": "Osteria Ca' d'Oro alla Vedova, Venezia", "note": "Polpette de carne famosas. Calle del Pistor 3912. Mirad el día de cierre."}, {"id": "peoco", "cat": "comer", "name": "Osteria Dal Riccio Peoco", "lat": 45.4403, "lng": 12.3372, "q": "Osteria Dal Riccio Peoco, Venezia", "note": "Panino scrocchio y cicchetti desde 2,50 €. Cannaregio 4462."}, {"id": "alponte", "cat": "comer", "name": "Osteria al Ponte", "lat": 45.4396, "lng": 12.3411, "q": "Osteria al Ponte, Calle Larga Giacinto Gallina, Venezia", "note": "De los más baratos de Venecia; pasta y pescado."}, {"id": "timon", "cat": "comer", "name": "Al Timon", "lat": 45.4447, "lng": 12.3277, "q": "Al Timon, Fondamenta degli Ormesini, Venezia", "note": "Vino barato y cicchetti, con mesas en una barca."}, {"id": "bevitore", "cat": "comer", "name": "Il Santo Bevitore", "lat": 45.4424, "lng": 12.3306, "q": "Il Santo Bevitore, Venezia", "note": "Cervezas artesanas. Campo Santa Fosca."}, {"id": "frasca", "cat": "comer", "name": "Osteria Alla Frasca", "lat": 45.4424, "lng": 12.3384, "q": "Osteria Alla Frasca, Cannaregio, Venezia", "note": "Para sentarse: rigatoni con scampi y radicchio."}, {"id": "domori", "cat": "comer", "name": "Cantina Do Mori", "lat": 45.4386, "lng": 12.3346, "q": "Cantina Do Mori, Venezia", "note": "Uno de los bacari más antiguos, junto a Rialto."}, {"id": "ravano", "cat": "comer", "name": "Bacaro Al Ravano", "lat": 45.4388, "lng": 12.3332, "q": "Bacaro Al Ravano, Venezia", "note": "Cicchetti junto al mercado de Rialto."}];
+const CATS = {
+  casa:{label:"Apartamento",color:"var(--c-casa)",hex:"#5f4590",g:"⌂"},
+  visita:{label:"Visitas",color:"var(--c-visita)",hex:"#e4572e",g:"★"},
+  gratis:{label:"Gratis",color:"var(--c-gratis)",hex:"#0d8a7d",g:"●"},
+  comer:{label:"Comer",color:"var(--c-comer)",hex:"#d97706",g:"€"},
+  transporte:{label:"Transporte",color:"var(--c-transporte)",hex:"#1f6feb",g:"⛵︎"},
+  islas:{label:"Islas",color:"var(--c-islas)",hex:"#c2185b",g:"◆"}
+};
+const P = Object.fromEntries(PLACES.map(p=>[p.id,p]));
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const gq = p => p.q || `${p.lat},${p.lng}`;
+const gView = p => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(gq(p));
+const gGo = (p,mode="walking") => "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(gq(p)) + "&travelmode=" + mode;
+const gRoute = (ids,mode) => { const pts = ids.map(i=>gq(P[i])); const u = new URL("https://www.google.com/maps/dir/"); u.searchParams.set("api","1"); u.searchParams.set("origin",pts[0]); u.searchParams.set("destination",pts[pts.length-1]); if(pts.length>2) u.searchParams.set("waypoints",pts.slice(1,-1).join("|")); u.searchParams.set("travelmode",mode); return u.toString(); };
+function toast(m){ const t=document.createElement("div"); t.className="toast"; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
+const store = { get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(_){ return d; } }, set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){} } };
+
+/* cuenta atrás */
+(function(){
+  const start = new Date("2026-11-11T09:25:00+00:00"), end = new Date("2026-11-14T12:05:00+01:00"), now = new Date();
+  const d = Math.ceil((start - now)/86400000);
+  const el = document.getElementById("cd");
+  if(now < start) el.innerHTML = `<b>${d}</b><span>${d===1?"día":"días"}</span>`;
+  else if(now < end) el.innerHTML = `<b>¡Ya!</b><span>de viaje</span>`;
+})();
+
+/* pestañas */
+let map;
+function show(v){
+  document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on", s.id==="v-"+v));
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on", b.dataset.v===v));
+  if(v==="mapa" && map){ map.invalidateSize(); if(!map._fitted){ fitCity(); map._fitted=true; } }
+  if(v!=="mapa") scrollTo(0,0);
+  history.replaceState(null,"","#"+v);
+}
+document.querySelector(".tabs").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b) show(b.dataset.v); });
+
+/* mapa */
+const layers = {};
+function initMap(){
+  if(!window.L){ document.getElementById("map").innerHTML = '<div style="padding:24px">El mapa necesita conexión la primera vez. Los botones de Google Maps siguen funcionando.</div>'; return; }
+  map = L.map("map",{zoomControl:false, attributionControl:true}).setView([P.casa.lat,P.casa.lng],15);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+  Object.keys(CATS).forEach(c=>layers[c]=L.layerGroup().addTo(map));
+  PLACES.forEach(p=>{
+    const c = CATS[p.cat]; const big = p.cat==="casa";
+    const icon = L.divIcon({className:"",html:`<div class="pin ${big?"big":""}" style="background:${c.hex}"><span>${c.g}</span></div>`,iconSize:big?[36,36]:[26,26],iconAnchor:big?[18,36]:[13,26],popupAnchor:[0,big?-34:-24]});
+    const m = L.marker([p.lat,p.lng],{icon,title:p.name,zIndexOffset:big?1000:0});
+    m.bindPopup(`<div class="pop"><div class="kicker" style="color:${c.hex}">${esc(c.label)}</div><h3>${esc(p.name)}</h3><p>${esc(p.note)}</p><div class="row"><a class="btn" href="${gGo(p, p.cat==="islas"||p.id==="vce"?"transit":"walking")}" target="_blank" rel="noopener">Cómo llegar</a><a class="btn line" href="${gView(p)}" target="_blank" rel="noopener">Google Maps</a>${p.url?`<a class="btn line" href="${esc(p.url)}" target="_blank" rel="noopener">Web</a>`:""}</div></div>`);
+    m.addTo(layers[p.cat]); p._m = m;
+  });
+}
+function fitCity(){ const b = L.latLngBounds(PLACES.filter(p=>!["vce","burano","murano"].includes(p.id)).map(p=>[p.lat,p.lng])); map.fitBounds(b,{padding:[30,30]}); }
+const fwrap = document.getElementById("filters");
+const fon = store.get("ve-filters", Object.fromEntries(Object.keys(CATS).map(k=>[k,true])));
+fwrap.innerHTML = Object.entries(CATS).map(([k,c])=>`<button class="fchip ${fon[k]!==false?"on":""}" data-c="${k}"><i style="background:${c.hex}"></i>${esc(c.label)}</button>`).join("");
+fwrap.addEventListener("click",e=>{ const b=e.target.closest("[data-c]"); if(!b||!map) return; const k=b.dataset.c; fon[k] = !(fon[k]!==false); b.classList.toggle("on",fon[k]); fon[k]?layers[k].addTo(map):layers[k].remove(); store.set("ve-filters",fon); });
+document.getElementById("btn-home").onclick = ()=>{ if(!map) return; map.setView([P.casa.lat,P.casa.lng],17); P.casa._m.openPopup(); };
+document.getElementById("btn-all").onclick = ()=> map && fitCity();
+let me;
+document.getElementById("btn-loc").onclick = ()=>{
+  if(!navigator.geolocation||!map) return toast("Este móvil no da la ubicación.");
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const ll=[pos.coords.latitude,pos.coords.longitude];
+    if(!me) me = L.circleMarker(ll,{radius:9,color:"#fff",weight:3,fillColor:"#1f6feb",fillOpacity:1}).addTo(map); else me.setLatLng(ll);
+    map.setView(ll,17);
+  }, ()=>toast("No se pudo obtener la ubicación. Revisa el permiso."), {enableHighAccuracy:true,timeout:10000});
+};
+function focusPlace(id){ show("mapa"); const p=P[id]; if(!p||!map) return; if(fon[p.cat]===false){ fon[p.cat]=true; layers[p.cat].addTo(map); fwrap.querySelector(`[data-c="${p.cat}"]`).classList.add("on"); } map.setView([p.lat,p.lng],17); p._m.openPopup(); }
+document.addEventListener("click",e=>{ const a=e.target.closest("[data-place]"); if(a){ e.preventDefault(); focusPlace(a.dataset.place); } });
+
+/* plan */
+const DAYS = [
+  {d:11,w:"Miércoles",t:"Llegada y primeros cicchetti",route:["vce","fn","casa"],mode:"transit",steps:[
+    ["17:45","Aterrizaje en Marco Polo (UX1083 desde Madrid)","vce"],
+    ["~18:30","Barco Alilaguna línea naranja hasta Fondamente Nove, unos 40 min","fn"],
+    ["~19:30","10 min a pie hasta el apartamento. Avisad al anfitrión de la hora","casa"],
+    ["20:30","Cena de cicchetti en Alla Vedova o Dal Riccio Peoco. Probad el dulce de San Martino","vedova"]]},
+  {d:12,w:"Jueves",t:"San Marco y el Gran Canal",route:["casa","rialto","basilica","academia","dogana"],mode:"walking",steps:[
+    ["8:30","Andando a San Marco por Strada Nova y Rialto, unos 30 min","rialto"],
+    ["9:30","Basílica de San Marco, con hora reservada","basilica"],
+    ["10:30","Palacio Ducal, 2–2,5 h","ducale"],
+    ["13:30","Comida de cicchetti en Cantina Do Mori, junto a Rialto","domori"],
+    ["15:30","Puente de la Academia y Santa Maria della Salute","academia"],
+    ["16:30","Punta della Dogana y atardecer en las Zattere con un spritz","zattere"],
+    ["18:00","Vuelta en vaporetto línea 1 por el Gran Canal de noche hasta Ca' d'Oro","cadoro"]]},
+  {d:13,w:"Viernes",t:"Rialto por la mañana e islas",route:["casa","mercado","fn","burano"],mode:"transit",steps:[
+    ["8:30","Traghetto de Santa Sofia y mercado de Rialto (solo mañanas)","traghetto"],
+    ["11:00","Abono de 24 h y vaporetto a Murano desde Fondamente Nove","murano"],
+    ["13:30","Burano: comida y paseo entre casas de colores","burano"],
+    ["17:00","Vuelta a Fondamente Nove","fn"],
+    ["19:00","Ruta de bacari por Misericordia y Ormesini: Al Timon, Il Santo Bevitore","timon"]],
+    alt:"Si preferís arte contemporáneo, cambiad la tarde por la Biennale (abierta hasta el 22 nov)."},
+  {d:14,w:"Sábado",t:"Vuelta a Madrid",route:["casa","fn","vce"],mode:"transit",steps:[
+    ["9:15","Salida del apartamento (límite: 10:00)","casa"],
+    ["9:30–10:00","Barco Alilaguna naranja desde Fondamente Nove","fn"],
+    ["~10:45","Aeropuerto. Vuelo IB0678 a las 12:05, llega a Madrid T4 a las 14:45","vce"]]}
+];
+document.getElementById("plan").innerHTML = DAYS.map(x=>`<article class="card day">
+  <div><div class="dn">${x.d}</div><div class="dw">${x.w}</div></div>
+  <div><h3>${esc(x.t)}</h3>
+    <ul class="steps">${x.steps.map(([t,s,id])=>`<li><span class="t">${esc(t)}</span><span>${id?`<a href="#mapa" data-place="${id}">${esc(s)}</a>`:esc(s)}</span></li>`).join("")}</ul>
+    ${x.alt?`<p class="note" style="margin:0 0 10px">${esc(x.alt)}</p>`:""}
+    <a class="btn" href="${gRoute(x.route,x.mode)}" target="_blank" rel="noopener">Ruta del día en Google Maps</a>
+  </div></article>`).join("");
+
+/* entradas */
+const TICKETS = [
+  {id:"basilica",n:"Basílica de San Marco",p:"10 €",tag:["Reservar ya","warn"],d:"Solo online y con hora; no hay taquilla. La completa (30 €) añade Pala d'Oro, museo y terraza. Sin mochilas.",url:"https://tickets.basilicasanmarco.it/"},
+  {id:"ducale",n:"Palacio Ducal",p:"35 €",tag:["Reservar","warn"],d:"Incluye Museo Correr, Arqueológico y Biblioteca Marciana. El Puente de los Suspiros por dentro. 2–2,5 h.",url:"https://palazzoducale.visitmuve.it/"},
+  {id:"campanile",n:"Campanile de San Marco",p:"15 €",tag:["Opcional",""],d:"Vistas desde arriba. Con niebla no compensa."},
+  {id:"biennale",n:"Biennale Arte 2026",p:"30 €",tag:["Opcional",""],d:"Hasta el 22 nov, 10–18 h, cerrada los lunes. Solo si os gusta el arte contemporáneo.",url:"https://www.labiennale.org/"},
+  {id:"traghetto",n:"Traghetto (góndola para cruzar)",p:"~2 €",tag:["Sin reserva","ok"],d:"La experiencia de la góndola por casi nada. Una góndola de paseo ronda los 90 € por 30 min (unos 30 € cada uno)."},
+  {id:"murano",n:"Murano y Burano",p:"Gratis",tag:["Sin reserva","ok"],d:"Solo pagáis el vaporetto (abono de 24 h, 25 €)."}
+];
+document.getElementById("tickets").innerHTML = TICKETS.map(t=>`<article class="card tk">
+  <div><span class="tag ${t.tag[1]}">${esc(t.tag[0])}</span><h3 style="margin-top:6px">${esc(t.n)}</h3></div><div class="p">${esc(t.p)}</div>
+  <p>${esc(t.d)}</p>
+  <div class="row">${t.url?`<a class="btn" href="${esc(t.url)}" target="_blank" rel="noopener">Comprar / web</a>`:""}<a class="btn line" href="#mapa" data-place="${t.id}">Ver en el mapa</a></div>
+</article>`).join("");
+
+/* comer */
+const FOOD = ["vedova","peoco","alponte","timon","bevitore","frasca","domori","ravano"];
+document.getElementById("food").innerHTML = FOOD.map(id=>{ const p=P[id]; return `<article class="card food">
+  <h3>${esc(p.name)}</h3><p>${esc(p.note)}</p>
+  <div class="row"><a class="btn" href="${gGo(p)}" target="_blank" rel="noopener">Cómo llegar</a><a class="btn line" href="#mapa" data-place="${id}">En el mapa</a></div>
+</article>`; }).join("");
+
+/* reservas */
+const BOOK = [
+  ["Ida · Air Europa","Lanzarote → Madrid → Venecia","Mié 11 nov · ACE 09:25 → MAD 13:00 (T2) · MAD 15:15 → VCE 17:45","7BGWY4","Sin maleta facturada"],
+  ["Vuelta · Iberia","Venecia → Madrid","Sáb 14 nov · VCE 12:05 → MAD 14:45 (T4) · IB0678","L0RC8","Sin maleta facturada"],
+  ["Apartamento · Booking","Cannaregio 4064, Campo delle Erbe","11–14 nov · entrada 13:00–00:00 · salida antes de las 10:00","6447.253.179","PIN 4915 · 308,06 € con tasa · cancelación gratis hasta el 5 nov · tel. +39 320 150 9337"]
+];
+document.getElementById("bookings").innerHTML = BOOK.map(b=>`<article class="card bk">
+  <div class="kicker">${esc(b[0])}</div><h3 style="font-size:17px">${esc(b[1])}</h3>
+  <div class="note">${esc(b[2])}</div>
+  <div class="ref" style="margin-top:6px">${esc(b[3])}</div>
+  <div class="note">${esc(b[4])}</div></article>`).join("");
+
+/* checklist */
+const CHECK = [
+  "Reservar la Basílica de San Marco (online, con hora)",
+  "Reservar el Palacio Ducal",
+  "Confirmar los vuelos de mamá y de la hermana",
+  "Revisar medidas del equipaje de mano (Air Europa e Iberia)",
+  "Avisar al apartamento de la llegada (~19:30)",
+  "Mirar el horario de noviembre de Alilaguna naranja",
+  "DNI o pasaporte en vigor de los tres",
+  "Llevar efectivo para bacari y la tasa municipal (36 €)",
+  "Calzado impermeable por el acqua alta",
+  "Cancelación gratis del apartamento: hasta el 5 nov"
+];
+const done = new Set(store.get("ve-check",[]));
+const ck = document.getElementById("check");
+const drawCheck = ()=> ck.innerHTML = CHECK.map((c,i)=>`<li class="${done.has(c)?"done":""}"><label><input type="checkbox" data-i="${i}" ${done.has(c)?"checked":""}><span>${esc(c)}</span></label></li>`).join("");
+drawCheck();
+ck.addEventListener("change",e=>{ const c=CHECK[+e.target.dataset.i]; e.target.checked?done.add(c):done.delete(c); store.set("ve-check",[...done]); drawCheck(); });
+
+/* tema */
+try{ const th=localStorage.getItem("ve-theme"); if(th) document.documentElement.dataset.theme=th; }catch(_){}
+document.getElementById("theme").onclick=()=>{ const r=document.documentElement; const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches; r.dataset.theme=dark?"light":"dark"; try{localStorage.setItem("ve-theme",r.dataset.theme)}catch(_){} };
+
+/* instalar */
+let deferred;
+const inst = document.getElementById("install"), ibtn = document.getElementById("install-btn"), itxt = document.getElementById("install-txt");
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+if(!standalone){
+  inst.classList.add("on");
+  if(/iphone|ipad|ipod/i.test(navigator.userAgent)) itxt.textContent = "En iPhone: abre esta página en Safari, pulsa Compartir y elige “Añadir a pantalla de inicio”.";
+  else itxt.textContent = "En Android: menú ⋮ de Chrome y “Instalar aplicación” o “Añadir a pantalla de inicio”.";
+}
+addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferred=e; ibtn.hidden=false; });
+ibtn.onclick = async ()=>{ if(!deferred) return; deferred.prompt(); await deferred.userChoice; deferred=null; ibtn.hidden=true; };
+if("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+initMap();
+const h = location.hash.slice(1); if(["mapa","entradas","comer","info"].includes(h)) show(h);
+</script>
+</body>
+</html>

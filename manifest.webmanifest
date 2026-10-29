@@ -1,0 +1,30 @@
+{
+ "name": "Venecia · Mamaines",
+ "short_name": "Venecia",
+ "lang": "es",
+ "description": "Mapa y guía del viaje a Venecia, 11–14 nov 2026",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#34265a",
+ "theme_color": "#5f4590",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512-maskable.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
