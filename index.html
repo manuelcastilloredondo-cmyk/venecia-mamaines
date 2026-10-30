@@ -357,10 +357,10 @@ const DAYS = [
     ["~19:30","10 min a pie hasta el apartamento. Avisad al anfitrión de la hora","casa"],
     ["20:30","Cena de cicchetti en Alla Vedova o Dal Riccio Peoco. Probad el dulce de San Martino","vedova"]]},
   {d:12,w:"Jueves",t:"San Marco y el Gran Canal",route:["casa","rialto","basilica","academia","dogana"],mode:"walking",steps:[
-    ["8:30","Andando a San Marco por Strada Nova y Rialto, unos 30 min","rialto"],
-    ["9:30","Basílica de San Marco, con hora reservada","basilica"],
-    ["10:30","Palacio Ducal, 2–2,5 h","ducale"],
-    ["13:30","Comida de cicchetti en Cantina Do Mori, junto a Rialto","domori"],
+    ["9:45","Andando a San Marco por Strada Nova y Rialto, unos 30 min","rialto"],
+    ["10:30","Basílica de San Marco con museo y terraza (turno reservado, ~1 h)","basilica"],
+    ["11:45","Palacio Ducal, 2–2,5 h","ducale"],
+    ["14:15","Comida de cicchetti en Cantina Do Mori, junto a Rialto","domori"],
     ["15:30","Puente de la Academia y Santa Maria della Salute","academia"],
     ["16:30","Punta della Dogana y atardecer en las Zattere con un spritz","zattere"],
     ["18:00","Vuelta en vaporetto línea 1 por el Gran Canal de noche hasta Ca' d'Oro","cadoro"]]},
@@ -386,8 +386,8 @@ document.getElementById("plan").innerHTML = DAYS.map(x=>`<article class="card da
 
 /* entradas */
 const TICKETS = [
-  {id:"basilica",n:"Basílica de San Marco",p:"10 €",tag:["Reservar ya","warn"],d:"Solo online y con hora; no hay taquilla. La completa (30 €) añade Pala d'Oro, museo y terraza. Sin mochilas.",url:"https://tickets.basilicasanmarco.it/"},
-  {id:"ducale",n:"Palacio Ducal",p:"35 €",tag:["Reservar","warn"],d:"Incluye Museo Correr, Arqueológico y Biblioteca Marciana. El Puente de los Suspiros por dentro. 2–2,5 h.",url:"https://palazzoducale.visitmuve.it/"},
+  {id:"basilica",n:"Basílica + Museo y terraza",p:"16 €",tag:["Turno 10:30","warn"],d:"Precio online con el 20 % ya aplicado (20 € de tarifa). Mayores de 65: 50 %. Entradas nominativas. Sin mochilas grandes y con hombros cubiertos.",url:"https://tickets.basilicasanmarco.it/"},
+  {id:"ducale",n:"Palacio Ducal",p:"35 € (65+: 15 €)",tag:["Reservar","warn"],d:"Incluye Museo Correr, Arqueológico y Biblioteca Marciana. El Puente de los Suspiros por dentro. 2–2,5 h.",url:"https://palazzoducale.visitmuve.it/"},
   {id:"campanile",n:"Campanile de San Marco",p:"15 €",tag:["Opcional",""],d:"Vistas desde arriba. Con niebla no compensa."},
   {id:"biennale",n:"Biennale Arte 2026",p:"30 €",tag:["Opcional",""],d:"Hasta el 22 nov, 10–18 h, cerrada los lunes. Solo si os gusta el arte contemporáneo.",url:"https://www.labiennale.org/"},
   {id:"traghetto",n:"Traghetto (góndola para cruzar)",p:"~2 €",tag:["Sin reserva","ok"],d:"La experiencia de la góndola por casi nada. Una góndola de paseo ronda los 90 € por 30 min (unos 30 € cada uno)."},
