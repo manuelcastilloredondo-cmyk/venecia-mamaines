@@ -102,6 +102,8 @@ main{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 24px)}
 .wx-day{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--muted);margin:-2px 0 10px}
 .wx-day:empty{display:none}
 .wx-head{padding:12px 16px}
+.pwarn{margin:0 0 12px;padding:10px 12px;border-radius:10px;background:var(--chip);border-left:4px solid var(--warn);font-size:14px;line-height:1.45}
+.pwarn b{color:var(--warn)}
 .mine-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
 .mine-row b{font:600 15px var(--display)}
 .mine-row small{display:block;color:var(--muted);font-size:12px}
@@ -383,7 +385,7 @@ const DAYS = [
     ["~18:30","Barco Alilaguna línea naranja hasta Fondamente Nove, unos 40 min","fn"],
     ["~19:30","10 min a pie hasta el apartamento. Avisad al anfitrión de la hora","casa"],
     ["20:30","Cena de cicchetti en Alla Vedova o Dal Riccio Peoco. Probad el dulce de San Martino","vedova"]]},
-  {d:12,w:"Jueves",t:"Rialto y la Basílica, con calma",route:["casa","mercado","basilica"],mode:"transit",steps:[
+  {d:12,w:"Jueves",t:"Rialto y la Basílica, con calma",warn:"Llevad las entradas de la Basílica (en la app y en papel) y el DNI de mamá. Hombros y rodillas cubiertos y nada de mochilas grandes.",route:["casa","mercado","basilica"],mode:"transit",steps:[
     ["9:15","Abono de 48 h y línea 1 de Ca' d'Oro a Rialto Mercato (una parada)","cadoro"],
     ["9:20","Paseo por el mercado de Rialto, todo llano (solo abre por la mañana)","mercado"],
     ["10:05","Línea 1 de Rialto a San Marco, unos 15 min sentados","rialto"],
@@ -391,7 +393,7 @@ const DAYS = [
     ["12:00","Comida tranquila cerca de San Marco o Castello",""],
     ["14:00","Vuelta en línea 1 y descanso en el apartamento","casa"],
     ["18:00","Línea 1 por el Gran Canal de noche y cicchetti en Alla Vedova","vedova"]]},
-  {d:13,w:"Viernes",t:"Palacio Ducal y Burano",route:["casa","ducale","fn","burano"],mode:"transit",steps:[
+  {d:13,w:"Viernes",t:"Palacio Ducal y Burano",warn:"Llevad las entradas del Palacio Ducal y del Correr (en la app y en papel) y el DNI de mamá.",route:["casa","ducale","fn","burano"],mode:"transit",steps:[
     ["9:30","Línea 1 de Ca' d'Oro a San Marco","cadoro"],
     ["10:00","Palacio Ducal, unas 2 h. Tiene ascensor, pero el Puente de los Suspiros y las prisiones van por escaleras","ducale"],
     ["12:30","Comida y descanso",""],
@@ -408,6 +410,7 @@ document.getElementById("plan").innerHTML = `<div class="card wx-head" id="wx-he
   <div><div class="dn">${x.d}</div><div class="dw">${x.w}</div></div>
   <div><h3>${esc(x.t)}</h3>
     <div class="wx-day" data-wxday="${x.d}"></div>
+    ${x.warn?`<p class="pwarn"><b>Antes de salir:</b> ${esc(x.warn)}</p>`:""}
     <ul class="steps">${x.steps.map(([t,s,id])=>`<li><span class="t">${esc(t)}<span class="wx" data-wx="${x.d}|${esc(t)}"></span></span><span>${id?`<a href="#mapa" data-place="${id}">${esc(s)}</a>`:esc(s)}</span></li>`).join("")}</ul>
     ${x.alt?`<p class="note" style="margin:0 0 10px">${esc(x.alt)}</p>`:""}
     <a class="btn" href="${gRoute(x.route,x.mode)}" target="_blank" rel="noopener">Ruta del día en Google Maps</a>
