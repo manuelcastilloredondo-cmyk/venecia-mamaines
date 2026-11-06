@@ -229,8 +229,8 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
           <tr><td>Abono 72 h</td><td class="n">45 €</td></tr>
         </table>
         <ul class="list" style="margin-top:12px">
-          <li><b>Jueves:</b> a San Marco andando y vuelta en línea 1 por el Gran Canal (un sencillo).</li>
-          <li><b>Viernes:</b> abono de 24 h para Murano y Burano desde Fondamente Nove.</li>
+          <li><b>Abono de 48 h (35 €)</b> desde el jueves a las 9:15: cubre todos los barcos del jueves y del viernes.</li>
+          <li>Línea 1 (Ca' d'Oro ↔ Rialto ↔ San Marco) para no caminar; línea 12 a Burano desde Fondamente Nove.</li>
           <li>Validad la tarjeta en el lector <b>cada vez</b> que subáis.</li>
           <li><b>Aeropuerto:</b> barco Alilaguna línea naranja ↔ Fondamente Nove. Los abonos ACTV no valen. Precio orientativo 15 €.</li>
           <li>Plan B: bus ATVO a Piazzale Roma (20 min) y 25–30 min andando.</li>
@@ -254,7 +254,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
         <table>
           <tr><td>Apartamento (308,06 € entre 3)</td><td class="n">103 €</td></tr>
           <tr><td>Basílica + Palacio Ducal</td><td class="n">45 €</td></tr>
-          <tr><td>Vaporetto (sencillo + 24 h)</td><td class="n">34,50 €</td></tr>
+          <tr><td>Vaporetto (abono 48 h)</td><td class="n">35 €</td></tr>
           <tr><td>Barco al aeropuerto, ida y vuelta</td><td class="n">~30 €</td></tr>
           <tr><td>Comida</td><td class="n">90–130 €</td></tr>
           <tr><th>Total sin vuelos</th><th class="n" style="text-align:right">~300–350 €</th></tr>
@@ -356,21 +356,22 @@ const DAYS = [
     ["~18:30","Barco Alilaguna línea naranja hasta Fondamente Nove, unos 40 min","fn"],
     ["~19:30","10 min a pie hasta el apartamento. Avisad al anfitrión de la hora","casa"],
     ["20:30","Cena de cicchetti en Alla Vedova o Dal Riccio Peoco. Probad el dulce de San Martino","vedova"]]},
-  {d:12,w:"Jueves",t:"San Marco y el Gran Canal",route:["casa","rialto","basilica","academia","dogana"],mode:"walking",steps:[
-    ["9:45","Andando a San Marco por Strada Nova y Rialto, unos 30 min","rialto"],
-    ["10:30","Basílica de San Marco con museo y terraza (turno reservado, ~1 h)","basilica"],
-    ["11:45","Palacio Ducal, 2–2,5 h","ducale"],
-    ["14:15","Comida de cicchetti en Cantina Do Mori, junto a Rialto","domori"],
-    ["15:30","Puente de la Academia y Santa Maria della Salute","academia"],
-    ["16:30","Punta della Dogana y atardecer en las Zattere con un spritz","zattere"],
-    ["18:00","Vuelta en vaporetto línea 1 por el Gran Canal de noche hasta Ca' d'Oro","cadoro"]]},
-  {d:13,w:"Viernes",t:"Rialto por la mañana e islas",route:["casa","mercado","fn","burano"],mode:"transit",steps:[
-    ["8:30","Traghetto de Santa Sofia y mercado de Rialto (solo mañanas)","traghetto"],
-    ["11:00","Abono de 24 h y vaporetto a Murano desde Fondamente Nove","murano"],
-    ["13:30","Burano: comida y paseo entre casas de colores","burano"],
-    ["17:00","Vuelta a Fondamente Nove","fn"],
-    ["19:00","Ruta de bacari por Misericordia y Ormesini: Al Timon, Il Santo Bevitore","timon"]],
-    alt:"Si preferís arte contemporáneo, cambiad la tarde por la Biennale (abierta hasta el 22 nov)."},
+  {d:12,w:"Jueves",t:"Rialto y la Basílica, con calma",route:["casa","mercado","basilica"],mode:"transit",steps:[
+    ["9:15","Abono de 48 h y línea 1 de Ca' d'Oro a Rialto Mercato (una parada)","cadoro"],
+    ["9:20","Paseo por el mercado de Rialto, todo llano (solo abre por la mañana)","mercado"],
+    ["10:05","Línea 1 de Rialto a San Marco, unos 15 min sentados","rialto"],
+    ["10:30","Basílica de San Marco (turno 10:30–11:00). El museo y la terraza tienen escalera estrecha: opcional para mamá","basilica"],
+    ["12:00","Comida tranquila cerca de San Marco o Castello",""],
+    ["14:00","Vuelta en línea 1 y descanso en el apartamento","casa"],
+    ["18:00","Línea 1 por el Gran Canal de noche y cicchetti en Alla Vedova","vedova"]]},
+  {d:13,w:"Viernes",t:"Palacio Ducal y Burano",route:["casa","ducale","fn","burano"],mode:"transit",steps:[
+    ["9:30","Línea 1 de Ca' d'Oro a San Marco","cadoro"],
+    ["10:00","Palacio Ducal, unas 2 h. Tiene ascensor, pero el Puente de los Suspiros y las prisiones van por escaleras","ducale"],
+    ["12:30","Comida y descanso",""],
+    ["14:30","Línea 12 desde Fondamente Nove a Burano, unos 40 min","fn"],
+    ["15:15","Burano, llano y de colores. Id con tiempo: anochece hacia las 16:45","burano"],
+    ["17:30","Vuelta en barco (la línea 12 para en Murano) y cena por Misericordia: Al Timon, Il Santo Bevitore","timon"]],
+    alt:"Si mamá va cansada, el Palacio lo podéis hacer tu hermana y tú mientras ella espera en un café de la Riva degli Schiavoni."},
   {d:14,w:"Sábado",t:"Vuelta a Madrid",route:["casa","fn","vce"],mode:"transit",steps:[
     ["9:15","Salida del apartamento (límite: 10:00)","casa"],
     ["9:30–10:00","Barco Alilaguna naranja desde Fondamente Nove","fn"],
@@ -391,7 +392,7 @@ const TICKETS = [
   {id:"campanile",n:"Campanile de San Marco",p:"15 €",tag:["Opcional",""],d:"Vistas desde arriba. Con niebla no compensa."},
   {id:"biennale",n:"Biennale Arte 2026",p:"30 €",tag:["Opcional",""],d:"Hasta el 22 nov, 10–18 h, cerrada los lunes. Solo si os gusta el arte contemporáneo.",url:"https://www.labiennale.org/"},
   {id:"traghetto",n:"Traghetto (góndola para cruzar)",p:"~2 €",tag:["Sin reserva","ok"],d:"La experiencia de la góndola por casi nada. Una góndola de paseo ronda los 90 € por 30 min (unos 30 € cada uno)."},
-  {id:"murano",n:"Murano y Burano",p:"Gratis",tag:["Sin reserva","ok"],d:"Solo pagáis el vaporetto (abono de 24 h, 25 €)."}
+  {id:"murano",n:"Murano y Burano",p:"Gratis",tag:["Sin reserva","ok"],d:"Solo pagáis el vaporetto (incluido en el abono de 48 h)."}
 ];
 document.getElementById("tickets").innerHTML = TICKETS.map(t=>`<article class="card tk">
   <div><span class="tag ${t.tag[1]}">${esc(t.tag[0])}</span><h3 style="margin-top:6px">${esc(t.n)}</h3></div><div class="p">${esc(t.p)}</div>
