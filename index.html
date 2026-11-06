@@ -121,7 +121,7 @@ main{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 24px)}
 .steps a{color:var(--ink);text-decoration:none}
 .steps a::after{content:" ⌖";color:var(--accent);font-weight:700}
 .tag{display:inline-block;font:700 10px var(--display);letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:4px;background:var(--chip);color:var(--muted)}
-.tag.ok{color:var(--ok)}
+.tag.ok{color:#fff;background:var(--ok)}
 .tag.warn{color:var(--warn)}
 
 .tk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:start}
@@ -492,12 +492,12 @@ drawMine();
 
 /* entradas */
 const TICKETS = [
-  {id:"basilica",n:"Basílica + Museo y terraza",p:"50 € (×3)",tag:["Comprado · jue 10:30","ok"],d:"Pedido 171-F24SR0K. Entrada de 10:30 a 11:00 (±15 min). Nominativas: Manuel, Rocío e Inés (65+, llevar DNI). Hombros y rodillas cubiertos; sin mochilas de más de 40×30×20 cm. No incluye la Pala d'Oro.",url:"https://tickets.basilicasanmarco.it/"},
-  {id:"ducale",n:"Palacio Ducal + Museo Correr",p:"85 € (×3)",tag:["Comprado · vie 10:00","ok"],d:"Palacio Ducal viernes 13 a las 10:00; Museo Correr a las 12:30 (incluido, opcional). 2 entradas normales y 1 de mayores de 65: mamá, llevar DNI.",url:"https://palazzoducale.visitmuve.it/"},
+  {id:"basilica",n:"Basílica + Museo y terraza",p:"50 € (×3)",tag:["✓ OK · Comprada · jue 10:30","ok"],d:"Pedido 171-F24SR0K. Entrada de 10:30 a 11:00 (±15 min). Nominativas: Manuel, Rocío e Inés (65+, llevar DNI). Hombros y rodillas cubiertos; sin mochilas de más de 40×30×20 cm. No incluye la Pala d'Oro.",url:"https://tickets.basilicasanmarco.it/"},
+  {id:"ducale",n:"Palacio Ducal + Museo Correr",p:"85 € (×3)",tag:["✓ OK · Comprada · vie 10:00","ok"],d:"Palacio Ducal viernes 13 a las 10:00; Museo Correr a las 12:30 (incluido, opcional). 2 entradas normales y 1 de mayores de 65: mamá, llevar DNI.",url:"https://palazzoducale.visitmuve.it/"},
   {id:"campanile",n:"Campanile de San Marco",p:"15 €",tag:["Opcional",""],d:"Vistas desde arriba. Con niebla no compensa."},
   {id:"biennale",n:"Biennale Arte 2026",p:"30 €",tag:["Opcional",""],d:"Hasta el 22 nov, 10–18 h, cerrada los lunes. Solo si os gusta el arte contemporáneo.",url:"https://www.labiennale.org/"},
-  {id:"traghetto",n:"Traghetto (góndola para cruzar)",p:"~2 €",tag:["Sin reserva","ok"],d:"La experiencia de la góndola por casi nada. Una góndola de paseo ronda los 90 € por 30 min (unos 30 € cada uno)."},
-  {id:"murano",n:"Murano y Burano",p:"Gratis",tag:["Sin reserva","ok"],d:"Solo pagáis el vaporetto (incluido en el abono de 48 h)."}
+  {id:"traghetto",n:"Traghetto (góndola para cruzar)",p:"~2 €",tag:["Sin reserva",""],d:"La experiencia de la góndola por casi nada. Una góndola de paseo ronda los 90 € por 30 min (unos 30 € cada uno)."},
+  {id:"murano",n:"Murano y Burano",p:"Gratis",tag:["Sin reserva",""],d:"Solo pagáis el vaporetto (incluido en el abono de 48 h)."}
 ];
 document.getElementById("tickets").innerHTML = TICKETS.map(t=>`<article class="card tk">
   <div><span class="tag ${t.tag[1]}">${esc(t.tag[0])}</span><h3 style="margin-top:6px">${esc(t.n)}</h3></div><div class="p">${esc(t.p)}</div>
