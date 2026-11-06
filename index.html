@@ -102,6 +102,19 @@ main{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 24px)}
 .wx-day{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--muted);margin:-2px 0 10px}
 .wx-day:empty{display:none}
 .wx-head{padding:12px 16px}
+.mine-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.mine-row b{font:600 15px var(--display)}
+.mine-row small{display:block;color:var(--muted);font-size:12px}
+.mine-row .ok{color:var(--ok);font-weight:700}
+.mine-row .row{display:flex;gap:6px}
+.viewer{position:fixed;inset:0;z-index:3000;background:var(--paper);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.viewer[hidden]{display:none}
+.vbar{display:flex;gap:8px;align-items:center;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+.vbar b{flex:1;font:700 15px var(--display);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vbody{flex:1;min-height:0;overflow:auto;background:#fff;display:flex;justify-content:center}
+.vbody img{max-width:100%;height:auto;align-self:flex-start}
+.vbody iframe{border:0;width:100%;height:100%}
+
 
 .steps a{color:var(--ink);text-decoration:none}
 .steps a::after{content:" ⌖";color:var(--accent);font-weight:700}
@@ -176,7 +189,14 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   <section id="v-entradas" class="view" aria-label="Entradas">
     <div class="wrap">
       <h2 class="sec">Entradas</h2>
-      <p class="lede">Solo hay que reservar ya la Basílica y el Palacio Ducal. Precios de 2026 por persona.</p>
+      <p class="lede">Ya tenéis compradas la Basílica y el Palacio Ducal. El resto se paga allí o es gratis.</p>
+      <div class="card mine" id="mine">
+        <div class="kicker">Mis entradas</div>
+        <p class="note" style="margin:4px 0 10px">Guarda aquí el PDF o una captura del código QR. Se queda solo en este móvil y se abre sin conexión. Cada una lo añade en su teléfono.</p>
+        <div id="mine-list"></div>
+        <input type="file" id="mine-file" accept="application/pdf,image/*" hidden>
+      </div>
+      <div class="viewer" id="viewer" hidden><div class="vbar"><b id="viewer-t"></b><a class="btn line" id="viewer-open" target="_blank" rel="noopener">Abrir</a><button class="btn" id="viewer-x">Cerrar</button></div><div class="vbody" id="viewer-b"></div></div>
       <div id="tickets"></div>
     </div>
   </section>
@@ -430,10 +450,47 @@ async function loadWx(){
 }
 loadWx();
 
+
+/* mis entradas (guardadas en este móvil) */
+const MINE=[
+  {id:"basilica",n:"Basílica de San Marco",w:"Jueves 12 · 10:30"},
+  {id:"ducale",n:"Palacio Ducal",w:"Viernes 13 · 10:00"},
+  {id:"correr",n:"Museo Correr",w:"Viernes 13 · 12:30 (opcional)"}
+];
+const idb=(()=>{let p;return()=>p||(p=new Promise((ok,ko)=>{try{const r=indexedDB.open("ve-entradas",1);r.onupgradeneeded=()=>r.result.createObjectStore("t");r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error);}catch(e){ko(e)}}));})();
+async function tGet(k){try{const db=await idb();return await new Promise(ok=>{const q=db.transaction("t").objectStore("t").get(k);q.onsuccess=()=>ok(q.result||null);q.onerror=()=>ok(null);});}catch(_){return null}}
+async function tSet(k,v){const db=await idb();return new Promise((ok,ko)=>{const tx=db.transaction("t","readwrite");tx.objectStore("t").put(v,k);tx.oncomplete=ok;tx.onerror=()=>ko(tx.error);});}
+async function tDel(k){try{const db=await idb();db.transaction("t","readwrite").objectStore("t").delete(k);}catch(_){}}
+async function drawMine(){
+  const rows=await Promise.all(MINE.map(async m=>({m,t:await tGet(m.id)})));
+  document.getElementById("mine-list").innerHTML=rows.map(({m,t})=>`<div class="mine-row"><div><b>${esc(m.n)}</b><small>${esc(m.w)}${t?` · <span class="ok">Guardada</span>`:""}</small></div><div class="row">${t?`<button class="btn" data-see="${m.id}">Ver entrada</button><button class="btn line" data-del="${m.id}" aria-label="Quitar">✕</button>`:`<button class="btn line" data-add="${m.id}">Añadir</button>`}</div></div>`).join("");
+}
+let addFor=null, curUrl=null;
+const mf=document.getElementById("mine-file");
+document.getElementById("mine-list").addEventListener("click",async e=>{
+  const a=e.target.closest("[data-add]"),s=e.target.closest("[data-see]"),d=e.target.closest("[data-del]");
+  if(a){addFor=a.dataset.add;mf.value="";mf.click();}
+  if(d){ if(d.dataset.armed){await tDel(d.dataset.del);drawMine();toast("Entrada quitada de este móvil");} else {d.dataset.armed="1";d.textContent="¿Quitar?";setTimeout(()=>{if(d.isConnected){delete d.dataset.armed;d.textContent="✕";}},3000);} }
+  if(s){ const t=await tGet(s.dataset.see); if(!t) return; const m=MINE.find(x=>x.id===s.dataset.see);
+    if(curUrl) URL.revokeObjectURL(curUrl); curUrl=URL.createObjectURL(t.blob);
+    document.getElementById("viewer-t").textContent=m.n+" · "+m.w;
+    document.getElementById("viewer-open").href=curUrl;
+    document.getElementById("viewer-b").innerHTML=t.type.startsWith("image/")?`<img src="${curUrl}" alt="Entrada ${esc(m.n)}">`:`<iframe src="${curUrl}" title="Entrada ${esc(m.n)}"></iframe>`;
+    document.getElementById("viewer").hidden=false; }
+});
+mf.addEventListener("change",async()=>{
+  const f=mf.files[0]; if(!f||!addFor) return;
+  try{ await tSet(addFor,{blob:f,type:f.type||"application/pdf",name:f.name,at:Date.now()}); toast("Entrada guardada en este móvil"); }
+  catch(_){ toast("No se pudo guardar. Prueba con una captura del código QR."); }
+  drawMine();
+});
+document.getElementById("viewer-x").onclick=()=>{document.getElementById("viewer").hidden=true;document.getElementById("viewer-b").innerHTML="";};
+drawMine();
+
 /* entradas */
 const TICKETS = [
   {id:"basilica",n:"Basílica + Museo y terraza",p:"50 € (×3)",tag:["Comprado · jue 10:30","ok"],d:"Pedido 171-F24SR0K. Entrada de 10:30 a 11:00 (±15 min). Nominativas: Manuel, Rocío e Inés (65+, llevar DNI). Hombros y rodillas cubiertos; sin mochilas de más de 40×30×20 cm. No incluye la Pala d'Oro.",url:"https://tickets.basilicasanmarco.it/"},
-  {id:"ducale",n:"Palacio Ducal",p:"35 € (65+: 15 €)",tag:["Reservar","warn"],d:"Incluye Museo Correr, Arqueológico y Biblioteca Marciana. El Puente de los Suspiros por dentro. 2–2,5 h.",url:"https://palazzoducale.visitmuve.it/"},
+  {id:"ducale",n:"Palacio Ducal + Museo Correr",p:"85 € (×3)",tag:["Comprado · vie 10:00","ok"],d:"Palacio Ducal viernes 13 a las 10:00; Museo Correr a las 12:30 (incluido, opcional). 2 entradas normales y 1 de mayores de 65: mamá, llevar DNI.",url:"https://palazzoducale.visitmuve.it/"},
   {id:"campanile",n:"Campanile de San Marco",p:"15 €",tag:["Opcional",""],d:"Vistas desde arriba. Con niebla no compensa."},
   {id:"biennale",n:"Biennale Arte 2026",p:"30 €",tag:["Opcional",""],d:"Hasta el 22 nov, 10–18 h, cerrada los lunes. Solo si os gusta el arte contemporáneo.",url:"https://www.labiennale.org/"},
   {id:"traghetto",n:"Traghetto (góndola para cruzar)",p:"~2 €",tag:["Sin reserva","ok"],d:"La experiencia de la góndola por casi nada. Una góndola de paseo ronda los 90 € por 30 min (unos 30 € cada uno)."},
@@ -467,7 +524,7 @@ document.getElementById("bookings").innerHTML = BOOK.map(b=>`<article class="car
 /* checklist */
 const CHECK = [
   "Llevar el PDF de las entradas de la Basílica (jue 10:30)",
-  "Reservar el Palacio Ducal",
+  "Guardar las entradas en la app (pestaña Entradas)",
   "Confirmar los vuelos de mamá y de la hermana",
   "Revisar medidas del equipaje de mano (Air Europa e Iberia)",
   "Avisar al apartamento de la llegada (~19:30)",
