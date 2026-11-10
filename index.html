@@ -102,6 +102,8 @@ main{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 24px)}
 .wx-day{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--muted);margin:-2px 0 10px}
 .wx-day:empty{display:none}
 .wx-head{padding:12px 16px}
+.wxh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.wxh .btn{padding:5px 10px;font-size:12px}
 .arrive{border:2px solid var(--c-transporte)}
 .pwarn{margin:0 0 12px;padding:10px 12px;border-radius:10px;background:var(--chip);border-left:4px solid var(--warn);font-size:14px;line-height:1.45}
 .pwarn b{color:var(--warn)}
@@ -437,7 +439,7 @@ const DAYS = [
     ["9:30–10:00","Barco Alilaguna línea azul (Blu) desde Fondamente Nove, unos 40 min. Pasa cada 30–60 min: mirad el horario","fn"],
     ["~10:45","Aeropuerto. Vuelo IB0678 a las 12:05, llega a Madrid T4 a las 14:45","vce"]]}
 ];
-document.getElementById("plan").innerHTML = `<div class="card wx-head" id="wx-head"><div class="kicker">El tiempo en Venecia</div><p class="note" id="wx-status" style="margin:4px 0 0">Cargando la previsión…</p></div>` + DAYS.map(x=>`<article class="card day">
+document.getElementById("plan").innerHTML = `<div class="card wx-head" id="wx-head"><div class="wxh"><div class="kicker">El tiempo en Venecia</div><button class="btn line" id="wx-refresh">↻ Actualizar</button></div><p class="note" id="wx-status" style="margin:4px 0 0">Cargando la previsión…</p></div>` + DAYS.map(x=>`<article class="card day">
   <div><div class="dn">${x.d}</div><div class="dw">${x.w}</div></div>
   <div><h3>${esc(x.t)}</h3>
     <div class="wx-day" data-wxday="${x.d}"></div>
@@ -483,6 +485,8 @@ async function loadWx(){
   }
 }
 loadWx();
+document.addEventListener("click",async e=>{ const b=e.target.closest("#wx-refresh"); if(!b) return; b.disabled=true; b.textContent="Actualizando…"; await loadWx(); b.disabled=false; b.textContent="↻ Actualizar"; });
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ const c=store.get("ve-wx",null); if(!c||Date.now()-c.at>3600000) loadWx(); } });
 
 
 /* mis entradas (guardadas en este móvil) */
