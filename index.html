@@ -102,6 +102,7 @@ main{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 24px)}
 .wx-day{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--muted);margin:-2px 0 10px}
 .wx-day:empty{display:none}
 .wx-head{padding:12px 16px}
+.arrive{border:2px solid var(--c-transporte)}
 .pwarn{margin:0 0 12px;padding:10px 12px;border-radius:10px;background:var(--chip);border-left:4px solid var(--warn);font-size:14px;line-height:1.45}
 .pwarn b{color:var(--warn)}
 .mine-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
@@ -238,6 +239,24 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
         <div class="kicker">Instala la app</div>
         <p style="margin:6px 0 10px" id="install-txt">Añádela a la pantalla de inicio para abrirla como una app y tenerla sin conexión.</p>
         <button class="btn block" id="install-btn" hidden>Instalar Venecia</button>
+      </div>
+
+      <h2 class="sec">Al llegar al aeropuerto</h2>
+      <div class="card arrive">
+        <div class="kicker">Barco Alilaguna · línea azul (Blu)</div>
+        <ol class="list" style="margin-top:8px">
+          <li>Al salir de llegadas, seguid los carteles de <b>"Water transport / Alilaguna"</b>: es un pasillo cubierto de unos 10 min andando hasta el embarcadero.</li>
+          <li>Comprad el billete en la <b>taquilla de Alilaguna</b> de la sala de llegadas o en sus <b>máquinas</b>. Pedid <b>ida y vuelta</b> ("andata e ritorno"): unos 32 € por persona.</li>
+          <li>Subid a la <b>línea azul (Blu)</b> y bajad en <b>Fondamente Nove</b>, unos 40 min. <b>La naranja no para allí.</b></li>
+          <li>Desde Fondamente Nove, 10 min andando al apartamento. Si queréis, llamad al anfitrión: +39 320 150 9337.</li>
+        </ol>
+        <ul class="list note" style="margin-top:10px">
+          <li>El abono del vaporetto (ACTV) no vale en este barco.</li>
+          <li>Cada uno puede llevar una maleta y un bolso sin pagar más.</li>
+          <li>Guardad el billete de vuelta para el sábado. Ese día mirad en el embarcadero de Fondamente Nove a qué hora pasa la línea azul entre las 9:30 y las 10:00.</li>
+          <li>El billete no reserva sitio: si un barco va lleno, se coge el siguiente.</li>
+        </ul>
+        <a class="btn" style="margin-top:12px" href="https://www.google.com/maps/dir/?api=1&amp;destination=Fondamente%20Nove%2C%20Venezia&amp;travelmode=transit" target="_blank" rel="noopener">Ruta a Fondamente Nove</a>
       </div>
 
       <h2 class="sec">Mapa compartido</h2>
