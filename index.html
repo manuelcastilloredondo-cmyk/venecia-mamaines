@@ -102,6 +102,20 @@ main{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 24px)}
 .wx-day{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--muted);margin:-2px 0 10px}
 .wx-day:empty{display:none}
 .wx-head{padding:12px 16px}
+.steps li.done .st{color:var(--muted)}
+.steps li.done .st a{color:var(--muted)}
+.sb{display:grid;gap:6px;min-width:0}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.acts button{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:3px 10px;font:600 12px var(--display);cursor:pointer}
+.acts .chk[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap}
+.thumbs:empty{display:none}
+.th{border:0;padding:0;background:none;cursor:pointer;width:56px;height:56px;border-radius:8px;overflow:hidden}
+.th img{width:100%;height:100%;object-fit:cover;display:block}
+.leaflet-marker-icon.seen .pin{box-shadow:0 0 0 3px var(--ok),0 2px 6px rgba(0,0,0,.35)}
+.leaflet-marker-icon.seen .pin::after{content:"✓";position:absolute;right:-8px;top:-8px;transform:rotate(45deg);background:var(--ok);color:#fff;border-radius:50%;width:16px;height:16px;font:800 11px/16px var(--display);text-align:center}
+.pin{position:relative}
+
 .wxh{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .wxh .btn{padding:5px 10px;font-size:12px}
 .arrive{border:2px solid var(--c-transporte)}
@@ -202,7 +216,6 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
         <div id="mine-list"></div>
         <input type="file" id="mine-file" accept="application/pdf,image/*" hidden>
       </div>
-      <div class="viewer" id="viewer" hidden><div class="vbar"><b id="viewer-t"></b><a class="btn line" id="viewer-open" target="_blank" rel="noopener">Abrir</a><button class="btn" id="viewer-x">Cerrar</button></div><div class="vbody" id="viewer-b"></div></div>
       <div id="tickets"></div>
     </div>
   </section>
@@ -323,6 +336,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       <p class="note"><button class="btn line" id="theme">Cambiar modo claro/oscuro</button></p>
     </div>
   </section>
+<div class="viewer" id="viewer" hidden><div class="vbar"><b id="viewer-t"></b><button class="btn line" id="viewer-share" hidden>Compartir</button><button class="btn line" id="viewer-del" hidden>Borrar</button><a class="btn line" id="viewer-open" target="_blank" rel="noopener">Abrir</a><button class="btn" id="viewer-x">Cerrar</button></div><div class="vbody" id="viewer-b"></div></div>
 </main>
 
 <nav class="tabs" aria-label="Secciones">
@@ -367,7 +381,7 @@ let map;
 function show(v){
   document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on", s.id==="v-"+v));
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on", b.dataset.v===v));
-  if(v==="mapa" && map){ map.invalidateSize(); if(!map._fitted){ fitCity(); map._fitted=true; } }
+  if(v==="mapa" && map){ map.invalidateSize(); if(typeof paintVisited==="function") paintVisited(); if(!map._fitted){ fitCity(); map._fitted=true; } }
   if(v!=="mapa") scrollTo(0,0);
   history.replaceState(null,"","#"+v);
 }
@@ -444,7 +458,7 @@ document.getElementById("plan").innerHTML = `<div class="card wx-head" id="wx-he
   <div><h3>${esc(x.t)}</h3>
     <div class="wx-day" data-wxday="${x.d}"></div>
     ${x.warn?`<p class="pwarn"><b>Antes de salir:</b> ${esc(x.warn)}</p>`:""}
-    <ul class="steps">${x.steps.map(([t,s,id])=>`<li><span class="t">${esc(t)}<span class="wx" data-wx="${x.d}|${esc(t)}"></span></span><span>${id?`<a href="#mapa" data-place="${id}">${esc(s)}</a>`:esc(s)}</span></li>`).join("")}</ul>
+    <ul class="steps">${x.steps.map(([t,s,id])=>{ const k=`${x.d}|${t}`; return `<li data-k="${esc(k)}" data-pl="${id||""}"><span class="t">${esc(t)}<span class="wx" data-wx="${x.d}|${esc(t)}"></span></span><span class="sb"><span class="st">${id?`<a href="#mapa" data-place="${id}">${esc(s)}</a>`:esc(s)}</span><span class="acts"><button class="chk" data-chk="${esc(k)}" aria-pressed="false">○ Visitado</button><button class="cam" data-cam="${esc(k)}">📷 Fotos</button></span><span class="thumbs" data-th="${esc(k)}"></span></span></li>`; }).join("")}</ul>
     ${x.alt?`<p class="note" style="margin:0 0 10px">${esc(x.alt)}</p>`:""}
     <a class="btn" href="${gRoute(x.route,x.mode)}" target="_blank" rel="noopener">Ruta del día en Google Maps</a>
   </div></article>`).join("");
@@ -495,7 +509,7 @@ const MINE=[
   {id:"ducale",n:"Palacio Ducal",w:"Viernes 13 · 10:00"},
   {id:"correr",n:"Museo Correr",w:"Viernes 13 · 12:30 (opcional)"}
 ];
-const idb=(()=>{let p;return()=>p||(p=new Promise((ok,ko)=>{try{const r=indexedDB.open("ve-entradas",1);r.onupgradeneeded=()=>r.result.createObjectStore("t");r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error);}catch(e){ko(e)}}));})();
+const idb=(()=>{let p;return()=>p||(p=new Promise((ok,ko)=>{try{const r=indexedDB.open("ve-entradas",2);r.onupgradeneeded=()=>{const d=r.result; if(!d.objectStoreNames.contains("t")) d.createObjectStore("t"); if(!d.objectStoreNames.contains("f")) d.createObjectStore("f",{autoIncrement:true});};r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error);}catch(e){ko(e)}}));})();
 async function tGet(k){try{const db=await idb();return await new Promise(ok=>{const q=db.transaction("t").objectStore("t").get(k);q.onsuccess=()=>ok(q.result||null);q.onerror=()=>ok(null);});}catch(_){return null}}
 async function tSet(k,v){const db=await idb();return new Promise((ok,ko)=>{const tx=db.transaction("t","readwrite");tx.objectStore("t").put(v,k);tx.oncomplete=ok;tx.onerror=()=>ko(tx.error);});}
 async function tDel(k){try{const db=await idb();db.transaction("t","readwrite").objectStore("t").delete(k);}catch(_){}}
@@ -522,8 +536,59 @@ mf.addEventListener("change",async()=>{
   catch(_){ toast("No se pudo guardar. Prueba con una captura del código QR."); }
   drawMine();
 });
-document.getElementById("viewer-x").onclick=()=>{document.getElementById("viewer").hidden=true;document.getElementById("viewer-b").innerHTML="";};
+document.getElementById("viewer-x").onclick=()=>{document.getElementById("viewer").hidden=true;document.getElementById("viewer-b").innerHTML="";document.getElementById("viewer-share").hidden=true;document.getElementById("viewer-del").hidden=true;};
 drawMine();
+
+/* visitado + fotos */
+const visited=new Set(store.get("ve-visited",[]));
+function paintVisited(){
+  document.querySelectorAll("li[data-k]").forEach(li=>{ const on=visited.has(li.dataset.k); li.classList.toggle("done",on); const b=li.querySelector(".chk"); b.setAttribute("aria-pressed",on); b.textContent=on?"✓ Visitado":"○ Visitado"; });
+  const vp=new Set([...document.querySelectorAll("li.done[data-pl]")].map(li=>li.dataset.pl).filter(Boolean));
+  PLACES.forEach(p=>{ const el=p._m&&p._m.getElement&&p._m.getElement(); if(el) el.classList.toggle("seen",vp.has(p.id)); });
+}
+async function fAll(){ try{const db=await idb(); return await new Promise(ok=>{const out=[];const c=db.transaction("f").objectStore("f").openCursor();c.onsuccess=()=>{const r=c.result;if(r){out.push({key:r.key,...r.value});r.continue();}else ok(out);};c.onerror=()=>ok(out);});}catch(_){return []} }
+async function fAdd(v){ const db=await idb(); return new Promise((ok,ko)=>{const tx=db.transaction("f","readwrite");tx.objectStore("f").add(v);tx.oncomplete=ok;tx.onerror=()=>ko(tx.error);}); }
+async function fDel(k){ try{const db=await idb(); await new Promise(ok=>{const tx=db.transaction("f","readwrite");tx.objectStore("f").delete(k);tx.oncomplete=ok;tx.onerror=ok;});}catch(_){} }
+function shrink(file){ return new Promise(res=>{ const url=URL.createObjectURL(file); const im=new Image(); im.onload=()=>{ const m=1600, k=Math.min(1,m/Math.max(im.width,im.height)); const c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext("2d").drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(url); c.toBlob(b=>res(b||file),"image/jpeg",0.82); }; im.onerror=()=>{URL.revokeObjectURL(url);res(file)}; im.src=url; }); }
+const thumbUrls=[];
+async function paintPhotos(){
+  thumbUrls.splice(0).forEach(u=>URL.revokeObjectURL(u));
+  const all=await fAll(); const by={};
+  all.forEach(f=>(by[f.step]=by[f.step]||[]).push(f));
+  document.querySelectorAll("[data-th]").forEach(el=>{
+    const list=by[el.dataset.th]||[];
+    el.innerHTML=list.map(f=>{ const u=URL.createObjectURL(f.blob); thumbUrls.push(u); return `<button class="th" data-ph="${f.key}"><img src="${u}" alt="Foto"></button>`; }).join("");
+    const cam=el.closest("li").querySelector(".cam"); cam.textContent=list.length?`📷 ${list.length}`:"📷 Fotos";
+  });
+  window._photos=all;
+}
+const pf=document.createElement("input"); pf.type="file"; pf.accept="image/*"; pf.multiple=true; pf.hidden=true; document.body.appendChild(pf);
+let camFor=null, curPhoto=null;
+pf.addEventListener("change",async()=>{
+  const files=[...pf.files]; if(!files.length||!camFor) return;
+  toast(files.length>1?`Guardando ${files.length} fotos…`:"Guardando foto…");
+  try{ for(const f of files){ const b=await shrink(f); await fAdd({step:camFor,blob:b,type:"image/jpeg",name:f.name,at:Date.now()}); }
+    if(!visited.has(camFor)){ visited.add(camFor); store.set("ve-visited",[...visited]); paintVisited(); }
+    toast("Fotos guardadas en este móvil"); }
+  catch(_){ toast("No se pudo guardar. Puede que el móvil no tenga espacio."); }
+  paintPhotos();
+});
+document.getElementById("plan").addEventListener("click",async e=>{
+  const c=e.target.closest("[data-chk]"), m=e.target.closest("[data-cam]"), t=e.target.closest("[data-ph]");
+  if(c){ const k=c.dataset.chk; visited.has(k)?visited.delete(k):visited.add(k); store.set("ve-visited",[...visited]); paintVisited(); }
+  if(m){ camFor=m.dataset.cam; pf.value=""; pf.click(); }
+  if(t){ const f=(window._photos||[]).find(x=>String(x.key)===t.dataset.ph); if(!f) return; curPhoto=f;
+    if(curUrl) URL.revokeObjectURL(curUrl); curUrl=URL.createObjectURL(f.blob);
+    const li=t.closest("li"); document.getElementById("viewer-t").textContent=li.querySelector(".st").textContent;
+    document.getElementById("viewer-open").href=curUrl;
+    document.getElementById("viewer-b").innerHTML=`<img src="${curUrl}" alt="Foto">`;
+    const file=new File([f.blob],`venecia-${f.at}.jpg`,{type:"image/jpeg"});
+    const sh=document.getElementById("viewer-share"); sh.hidden=!(navigator.canShare&&navigator.canShare({files:[file]})); sh.onclick=()=>navigator.share({files:[file],title:"Venecia"}).catch(()=>{});
+    const del=document.getElementById("viewer-del"); del.hidden=false; del.textContent="Borrar"; delete del.dataset.armed;
+    del.onclick=async()=>{ if(!del.dataset.armed){ del.dataset.armed="1"; del.textContent="¿Borrar?"; return; } await fDel(f.key); document.getElementById("viewer-x").click(); paintPhotos(); toast("Foto borrada"); };
+    document.getElementById("viewer").hidden=false; }
+});
+paintVisited(); paintPhotos();
 
 /* entradas */
 const TICKETS = [
