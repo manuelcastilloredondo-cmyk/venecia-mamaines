@@ -151,6 +151,8 @@ main{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 24px)}
 .food h3{font-size:16px}
 .food .addr{font-size:13px;color:var(--muted)}
 .food p{margin:0}
+.food.done h3::after{content:" ✓";color:var(--ok)}
+.food .acts{margin-top:4px}
 .food .price{font:600 14px var(--display);color:var(--accent-ink)}
 .food .row{display:flex;gap:8px;margin-top:6px}
 
@@ -399,7 +401,8 @@ function initMap(){
     const c = CATS[p.cat]; const big = p.cat==="casa";
     const icon = L.divIcon({className:"",html:`<div class="pin ${big?"big":""}" style="background:${c.hex}"><span>${c.g}</span></div>`,iconSize:big?[36,36]:[26,26],iconAnchor:big?[18,36]:[13,26],popupAnchor:[0,big?-34:-24]});
     const m = L.marker([p.lat,p.lng],{icon,title:p.name,zIndexOffset:big?1000:0});
-    m.bindPopup(`<div class="pop"><div class="kicker" style="color:${c.hex}">${esc(c.label)}</div><h3>${esc(p.name)}</h3><p>${esc(p.note)}</p><div class="row"><a class="btn" href="${gGo(p, p.cat==="islas"||p.id==="vce"?"transit":"walking")}" target="_blank" rel="noopener">Cómo llegar</a><a class="btn line" href="${gView(p)}" target="_blank" rel="noopener">Google Maps</a>${p.url?`<a class="btn line" href="${esc(p.url)}" target="_blank" rel="noopener">Web</a>`:""}</div></div>`);
+    m.bindPopup(`<div class="pop"><div class="kicker" style="color:${c.hex}">${esc(c.label)}</div><h3>${esc(p.name)}</h3><p>${esc(p.note)}</p><div class="row"><a class="btn" href="${gGo(p, p.cat==="islas"||p.id==="vce"?"transit":"walking")}" target="_blank" rel="noopener">Cómo llegar</a><a class="btn line" href="${gView(p)}" target="_blank" rel="noopener">Google Maps</a>${p.url?`<a class="btn line" href="${esc(p.url)}" target="_blank" rel="noopener">Web</a>`:""}</div><div class="acts" style="margin-top:8px"><button class="chk" data-chk="pl|${p.id}" aria-pressed="false">○ Visitado</button></div></div>`);
+    m.on("popupopen",()=>typeof paintVisited==="function"&&paintVisited());
     m.addTo(layers[p.cat]); p._m = m;
   });
 }
@@ -542,8 +545,9 @@ drawMine();
 /* visitado + fotos */
 const visited=new Set(store.get("ve-visited",[]));
 function paintVisited(){
-  document.querySelectorAll("li[data-k]").forEach(li=>{ const on=visited.has(li.dataset.k); li.classList.toggle("done",on); const b=li.querySelector(".chk"); b.setAttribute("aria-pressed",on); b.textContent=on?"✓ Visitado":"○ Visitado"; });
+  document.querySelectorAll("[data-chk]").forEach(b=>{ const on=visited.has(b.dataset.chk); b.setAttribute("aria-pressed",on); b.textContent=on?"✓ Visitado":"○ Visitado"; const box=b.closest("[data-k]"); if(box) box.classList.toggle("done",on); });
   const vp=new Set([...document.querySelectorAll("li.done[data-pl]")].map(li=>li.dataset.pl).filter(Boolean));
+  visited.forEach(k=>{ if(k.startsWith("pl|")) vp.add(k.slice(3)); });
   PLACES.forEach(p=>{ const el=p._m&&p._m.getElement&&p._m.getElement(); if(el) el.classList.toggle("seen",vp.has(p.id)); });
 }
 async function fAll(){ try{const db=await idb(); return await new Promise(ok=>{const out=[];const c=db.transaction("f").objectStore("f").openCursor();c.onsuccess=()=>{const r=c.result;if(r){out.push({key:r.key,...r.value});r.continue();}else ok(out);};c.onerror=()=>ok(out);});}catch(_){return []} }
@@ -558,7 +562,7 @@ async function paintPhotos(){
   document.querySelectorAll("[data-th]").forEach(el=>{
     const list=by[el.dataset.th]||[];
     el.innerHTML=list.map(f=>{ const u=URL.createObjectURL(f.blob); thumbUrls.push(u); return `<button class="th" data-ph="${f.key}"><img src="${u}" alt="Foto"></button>`; }).join("");
-    const cam=el.closest("li").querySelector(".cam"); cam.textContent=list.length?`📷 ${list.length}`:"📷 Fotos";
+    const cam=el.closest("[data-k]").querySelector(".cam"); cam.textContent=list.length?`📷 ${list.length}`:"📷 Fotos";
   });
   window._photos=all;
 }
@@ -573,13 +577,13 @@ pf.addEventListener("change",async()=>{
   catch(_){ toast("No se pudo guardar. Puede que el móvil no tenga espacio."); }
   paintPhotos();
 });
-document.getElementById("plan").addEventListener("click",async e=>{
+document.addEventListener("click",async e=>{
   const c=e.target.closest("[data-chk]"), m=e.target.closest("[data-cam]"), t=e.target.closest("[data-ph]");
   if(c){ const k=c.dataset.chk; visited.has(k)?visited.delete(k):visited.add(k); store.set("ve-visited",[...visited]); paintVisited(); }
   if(m){ camFor=m.dataset.cam; pf.value=""; pf.click(); }
   if(t){ const f=(window._photos||[]).find(x=>String(x.key)===t.dataset.ph); if(!f) return; curPhoto=f;
     if(curUrl) URL.revokeObjectURL(curUrl); curUrl=URL.createObjectURL(f.blob);
-    const li=t.closest("li"); document.getElementById("viewer-t").textContent=li.querySelector(".st").textContent;
+    const box=t.closest("[data-k]"); document.getElementById("viewer-t").textContent=box.dataset.title||box.querySelector(".st").textContent;
     document.getElementById("viewer-open").href=curUrl;
     document.getElementById("viewer-b").innerHTML=`<img src="${curUrl}" alt="Foto">`;
     const file=new File([f.blob],`venecia-${f.at}.jpg`,{type:"image/jpeg"});
@@ -609,9 +613,10 @@ document.getElementById("tickets").innerHTML = TICKETS.map(t=>`<article class="c
 const REC = ["rivetta","arco","domori","ravano","lollo","lele","cicheto","quebrado","gourmet"];
 const TABLA = ["parmigiano","merca","vinovero"];
 const FOOD = ["vedova","peoco","alponte","timon","bevitore","frasca"];
-const foodCard = id=>{ const p=P[id]; return `<article class="card food">
+const foodCard = id=>{ const p=P[id]; return `<article class="card food" data-k="pl|${id}" data-title="${esc(p.name)}">
   <h3>${esc(p.name)}</h3><p>${esc(p.note)}</p>${p.price?`<p class="price">💶 ${esc(p.price)}</p>`:""}
   <div class="row"><a class="btn" href="${gGo(p)}" target="_blank" rel="noopener">Cómo llegar</a>${p.lat!=null?`<a class="btn line" href="#mapa" data-place="${id}">En el mapa</a>`:`<a class="btn line" href="${gView(p)}" target="_blank" rel="noopener">Google Maps</a>`}</div>
+  <span class="acts"><button class="chk" data-chk="pl|${id}" aria-pressed="false">○ Visitado</button><button class="cam" data-cam="pl|${id}">📷 Fotos</button></span><span class="thumbs" data-th="pl|${id}"></span>
 </article>`; };
 document.getElementById("food-rec").innerHTML = REC.map(foodCard).join("");
 document.getElementById("food-tabla").innerHTML = TABLA.map(foodCard).join("");
